@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import { Id, TypeOptions, Theme, Position } from '../types';
 
@@ -40,24 +40,26 @@ export function Toast({
   const startRef = useRef(Date.now());
   const remainingRef = useRef(typeof autoClose === 'number' ? autoClose : 0);
 
-  // Drag state
   const toastRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ canDrag: false, didMove: false, start: 0, delta: 0, canCloseOnClick: true, removalDistance: 0 });
 
   const colors = ACCENT[type] ?? ACCENT.default;
 
-  function startTimer() {
+  // FIX: startTimer guards against existing timer to prevent race condition
+  const startTimer = useCallback(() => {
     if (autoClose === false) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
     startRef.current = Date.now();
     timerRef.current = setTimeout(close, remainingRef.current);
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoClose]);
 
-  function pauseTimer() {
+  const pauseTimer = useCallback(() => {
     if (autoClose === false || timerRef.current === null) return;
     clearTimeout(timerRef.current);
     timerRef.current = null;
     remainingRef.current -= Date.now() - startRef.current;
-  }
+  }, [autoClose]);
 
   function close() {
     if (exiting) return;
@@ -68,8 +70,9 @@ export function Toast({
   useEffect(() => {
     startTimer();
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
+  }, [startTimer]);
 
+  // FIX: startTimer/pauseTimer added to deps so onFocus/onBlur always call fresh versions
   useEffect(() => {
     if (!pauseOnFocusLoss) return;
     const onFocus = () => { setPaused(false); startTimer(); };
@@ -81,22 +84,17 @@ export function Toast({
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('blur', onBlur);
     };
-  }, [pauseOnFocusLoss]);
+  }, [pauseOnFocusLoss, startTimer, pauseTimer]);
 
-  function onPointerDown(e: React.PointerEvent) {
-    if (!draggable) return;
-    const toast = toastRef.current!;
-    dragRef.current.canDrag = true;
-    dragRef.current.didMove = false;
-    dragRef.current.canCloseOnClick = true;
-    dragRef.current.start = e.clientX;
-    dragRef.current.removalDistance = toast.offsetWidth * 0.8;
-    toast.style.transition = 'none';
-    document.addEventListener('pointermove', onPointerMove);
-    document.addEventListener('pointerup', onPointerUp);
-  }
+  // FIX: Stable forwarder refs — same function reference across re-renders.
+  // onPointerMove/onPointerUp update their implementations each render via impl refs,
+  // while the registered listener (stableMove/stableUp) never changes reference.
+  const onPointerMoveImpl = useRef<(e: PointerEvent) => void>(() => {});
+  const onPointerUpImpl   = useRef<() => void>(() => {});
+  const stableMove = useRef((e: PointerEvent) => onPointerMoveImpl.current(e));
+  const stableUp   = useRef(() => onPointerUpImpl.current());
 
-  function onPointerMove(e: PointerEvent) {
+  onPointerMoveImpl.current = (e: PointerEvent) => {
     const d = dragRef.current;
     const toast = toastRef.current;
     if (!d.canDrag || !toast) return;
@@ -105,11 +103,11 @@ export function Toast({
     if (d.start !== e.clientX) d.canCloseOnClick = false;
     toast.style.transform = `translateX(${d.delta}px)`;
     toast.style.opacity = `${1 - Math.abs(d.delta / d.removalDistance)}`;
-  }
+  };
 
-  function onPointerUp() {
-    document.removeEventListener('pointermove', onPointerMove);
-    document.removeEventListener('pointerup', onPointerUp);
+  onPointerUpImpl.current = () => {
+    document.removeEventListener('pointermove', stableMove.current);
+    document.removeEventListener('pointerup', stableUp.current);
     const d = dragRef.current;
     const toast = toastRef.current;
     if (!d.canDrag || !d.didMove || !toast) return;
@@ -121,6 +119,29 @@ export function Toast({
     toast.style.transition = 'transform 0.2s, opacity 0.2s';
     toast.style.removeProperty('transform');
     toast.style.removeProperty('opacity');
+  };
+
+  // FIX: Remove drag listeners on unmount in case component unmounts mid-drag
+  useEffect(() => {
+    const move = stableMove.current;
+    const up   = stableUp.current;
+    return () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+    };
+  }, []);
+
+  function onPointerDown(e: React.PointerEvent) {
+    if (!draggable) return;
+    const toast = toastRef.current!;
+    dragRef.current.canDrag = true;
+    dragRef.current.didMove = false;
+    dragRef.current.canCloseOnClick = true;
+    dragRef.current.start = e.clientX;
+    dragRef.current.removalDistance = toast.offsetWidth * 0.8;
+    toast.style.transition = 'none';
+    document.addEventListener('pointermove', stableMove.current);
+    document.addEventListener('pointerup', stableUp.current);
   }
 
   return (
