@@ -11,6 +11,12 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "sass": "^1.81.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.1"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

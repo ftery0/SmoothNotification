@@ -1,38 +1,62 @@
-.App {
-  text-align: center;
-}
+/* Demo-only styles — not part of the design system */
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+body {
+  background: #07070e;
+  color: #ededfa;
+  font-family: 'Instrument Sans', -apple-system, system-ui, sans-serif;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.demo {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 60px 24px;
+}
+
+.demo__header {
+  margin-bottom: 48px;
+}
+
+.demo__title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #ededfa;
+  margin-bottom: 8px;
+}
+
+.demo__subtitle {
+  font-size: 14px;
+  color: rgba(237, 237, 250, 0.4);
+}
+
+.demo__grid {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 36px;
 }
 
-.App-link {
-  color: #61dafb;
+.demo__section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 24px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.demo__section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(237, 237, 250, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+
+.demo__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
