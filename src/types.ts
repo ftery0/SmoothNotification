@@ -1,3 +1,4 @@
+import React from 'react';
 import { IconProps } from "./components/Icon";
 
 export type TypeOptions = 'info' | 'success' | 'warning' | 'error' | 'default';
@@ -162,6 +163,26 @@ interface CommonOptions {
   }
 
 export type Id = number | string;
+
+export type ToastPosition = Position;
+
+export type DraggableDirection = 'x' | 'y';
+
+export type ToastContent<T = unknown> =
+  | React.ReactNode
+  | ((props: T) => React.ReactNode);
+
+export interface CloseButtonProps {
+  closeToast?: (e: React.MouseEvent<HTMLElement>) => void;
+  type: TypeOptions;
+  ariaLabel?: string;
+}
+
+export type ToastTransition = React.ComponentType<{
+  in?: boolean;
+  appear?: boolean;
+  children: React.ReactNode;
+}>;
 
 export interface ToastOptions<Data = unknown> extends CommonOptions {
     /**
