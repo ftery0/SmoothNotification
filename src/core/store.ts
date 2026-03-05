@@ -83,5 +83,5 @@ export function emit(event: SmoothEvent) {
 
 export function subscribe(fn: Listener) {
   listeners.add(fn);
-  return () => listeners.delete(fn);
+  return () => { listeners.delete(fn); };
 }
