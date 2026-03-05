@@ -1,0 +1,56 @@
+import React from 'react';
+import { useAnimatedMount } from '../hooks/useAnimatedMount';
+import { Icon } from './Icon';
+import { TypeOptions } from '../types';
+
+export interface AlertProps {
+  isOpen: boolean;
+  message: React.ReactNode;
+  title?: string;
+  okText?: string;
+  icon?: TypeOptions;
+  onOk: () => void;
+}
+
+const ICON_VARIANT: Record<TypeOptions, string> = {
+  error:   'sn-dialog__icon--danger',
+  warning: 'sn-dialog__icon--warning',
+  success: 'sn-dialog__icon--success',
+  info:    'sn-dialog__icon--info',
+  default: 'sn-dialog__icon--default',
+};
+
+export function Alert({
+  isOpen,
+  message,
+  title = 'Notice',
+  okText = 'OK',
+  icon = 'info',
+  onOk,
+}: AlertProps) {
+  const { mounted, state } = useAnimatedMount(isOpen, 320);
+
+  if (!mounted) return null;
+
+  return (
+    <div
+      className={`sn-overlay${state === 'closing' ? ' is-closing' : ' is-opening'}`}
+      role="alertdialog"
+      aria-modal="true"
+      aria-label={title}
+    >
+      <div className={`sn-dialog${state === 'closing' ? ' is-closing' : ' is-opening'}`}>
+        <div className={`sn-dialog__icon ${ICON_VARIANT[icon]}`}>
+          <Icon theme="dark" type={icon} />
+        </div>
+        <div className="sn-dialog__title">{title}</div>
+        <div className="sn-dialog__message">{message}</div>
+        <div className="sn-dialog__actions sn-dialog__actions--center">
+          <button className="sn-btn sn-btn--primary" onClick={onOk}>
+            {okText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
