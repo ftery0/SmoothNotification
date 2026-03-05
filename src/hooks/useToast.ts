@@ -1,4 +1,4 @@
-import { DOMAttributes, useEffect, useRef, useState } from 'react';
+import React, { DOMAttributes, useEffect, useRef, useState } from 'react';
 
 import { ToastProps } from '../types';
 import { Default, Direction } from '../utils';
