@@ -2,7 +2,7 @@ import React, { DOMAttributes, useEffect, useRef, useState } from 'react';
 
 import { ToastProps } from '../types';
 import { Default, Direction } from '../utils';
-import { registerToggle } from '../core/store';
+import { registerToggle, deregisterToggle } from '../core/store';
 
 interface Draggable {
   start: number;
@@ -27,25 +27,45 @@ export function useToast(props: ToastProps) {
   }).current;
   const { autoClose, pauseOnHover, closeToast, onClick, closeOnClick } = props;
 
-  registerToggle({
-    id: props.toastId,
-    containerId: props.containerId,
-    fn: setIsRunning
-  });
+  // FIX: registerToggle moved into useEffect to run once and deregister on unmount
+  useEffect(() => {
+    registerToggle({
+      id: props.toastId,
+      containerId: props.containerId,
+      fn: setIsRunning,
+    });
+    return () => deregisterToggle(props.toastId, props.containerId);
+  }, [props.toastId, props.containerId]);
 
   useEffect(() => {
     if (props.pauseOnFocusLoss) {
       bindFocusEvents();
-
       return () => {
         unbindFocusEvents();
       };
     }
   }, [props.pauseOnFocusLoss]);
 
+  // FIX: Stable forwarder refs — same function reference across re-renders.
+  // onDragMove/onDragEnd update their implementations each render via impl refs,
+  // while the registered listener (stableMove/stableUp) never changes reference.
+  const onDragMoveImpl = useRef<(e: PointerEvent) => void>(() => {});
+  const onDragEndImpl  = useRef<() => void>(() => {});
+  const stableMove = useRef((e: PointerEvent) => onDragMoveImpl.current(e));
+  const stableEnd  = useRef(() => onDragEndImpl.current());
+
+  // FIX: Clean up drag listeners on unmount in case component unmounts mid-drag
+  useEffect(() => {
+    const move = stableMove.current;
+    const end  = stableEnd.current;
+    return () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', end);
+    };
+  }, []);
+
   function bindFocusEvents() {
     if (!document.hasFocus()) pauseToast();
-
     window.addEventListener('focus', playToast);
     window.addEventListener('blur', pauseToast);
   }
@@ -57,7 +77,6 @@ export function useToast(props: ToastProps) {
 
   function onDragStart(e: React.PointerEvent<HTMLElement>) {
     if (props.draggable === true || props.draggable === e.pointerType) {
-      bindDragEvents();
       const toast = toastRef.current!;
       drag.canCloseOnClick = true;
       drag.canDrag = true;
@@ -76,6 +95,10 @@ export function useToast(props: ToastProps) {
               : props.draggablePercent)) /
           100;
       }
+
+      drag.didMove = false;
+      document.addEventListener('pointermove', stableMove.current);
+      document.addEventListener('pointerup', stableEnd.current);
     }
   }
 
@@ -105,18 +128,8 @@ export function useToast(props: ToastProps) {
     setIsRunning(false);
   }
 
-  function bindDragEvents() {
-    drag.didMove = false;
-    document.addEventListener('pointermove', onDragMove);
-    document.addEventListener('pointerup', onDragEnd);
-  }
-
-  function unbindDragEvents() {
-    document.removeEventListener('pointermove', onDragMove);
-    document.removeEventListener('pointerup', onDragEnd);
-  }
-
-  function onDragMove(e: PointerEvent) {
+  // Update drag implementations each render (reads latest props/state via closure)
+  onDragMoveImpl.current = (e: PointerEvent) => {
     const toast = toastRef.current!;
     if (drag.canDrag && toast) {
       drag.didMove = true;
@@ -127,21 +140,24 @@ export function useToast(props: ToastProps) {
         drag.delta = e.clientY - drag.start;
       }
 
-      // prevent false positive during a toast click
-      if (drag.start !== e.clientX) drag.canCloseOnClick = false;
+      // FIX: check correct axis based on draggableDirection
+      const moved = props.draggableDirection === Direction.X
+        ? drag.start !== e.clientX
+        : drag.start !== e.clientY;
+      if (moved) drag.canCloseOnClick = false;
+
       const translate =
         props.draggableDirection === 'x'
-          ? `${drag.delta}px, var(--y)`
-          : `0, calc(${drag.delta}px + var(--y))`;
+          ? `${drag.delta}px, var(--y, 0px)`
+          : `0, calc(${drag.delta}px + var(--y, 0px))`;
       toast.style.transform = `translate3d(${translate},0)`;
-      toast.style.opacity = `${
-        1 - Math.abs(drag.delta / drag.removalDistance)
-      }`;
+      toast.style.opacity = `${1 - Math.abs(drag.delta / drag.removalDistance)}`;
     }
-  }
+  };
 
-  function onDragEnd() {
-    unbindDragEvents();
+  onDragEndImpl.current = () => {
+    document.removeEventListener('pointermove', stableMove.current);
+    document.removeEventListener('pointerup', stableEnd.current);
     const toast = toastRef.current!;
     if (drag.canDrag && drag.didMove && toast) {
       drag.canDrag = false;
@@ -156,7 +172,7 @@ export function useToast(props: ToastProps) {
       toast.style.removeProperty('transform');
       toast.style.removeProperty('opacity');
     }
-  }
+  };
 
   const eventHandlers: DOMAttributes<HTMLElement> = {
     onPointerDown: onDragStart,
@@ -165,12 +181,9 @@ export function useToast(props: ToastProps) {
 
   if (autoClose && pauseOnHover) {
     eventHandlers.onMouseEnter = pauseToast;
-
-    // progress control is delegated to the container
     if (!props.stacked) eventHandlers.onMouseLeave = playToast;
   }
 
-  // prevent toast from closing when user drags the toast
   if (closeOnClick) {
     eventHandlers.onClick = (e: React.MouseEvent) => {
       onClick && onClick(e);
