@@ -1,0 +1,70 @@
+// ─── Shared Buttons ───────────────────────────────────────────
+
+.sn-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px;
+  height: 36px;
+  border-radius: var(--sn-radius-sm);
+  font-family: var(--sn-font);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+  white-space: nowrap;
+  user-select: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--sn-info);
+    outline-offset: 2px;
+  }
+
+  // Ghost / secondary
+  &--ghost {
+    background: var(--sn-surface);
+    border-color: var(--sn-border);
+    color: var(--sn-text-muted);
+
+    &:hover {
+      background: var(--sn-surface-h);
+      border-color: var(--sn-border-h);
+      color: var(--sn-text);
+    }
+  }
+
+  // Primary (accent)
+  &--primary {
+    background: var(--sn-info);
+    color: #07070e;
+    border-color: transparent;
+
+    &:hover { opacity: 0.88; }
+  }
+
+  // Danger
+  &--danger {
+    background: rgba(255, 107, 138, 0.15);
+    border-color: rgba(255, 107, 138, 0.3);
+    color: var(--sn-error);
+
+    &:hover {
+      background: rgba(255, 107, 138, 0.25);
+      border-color: rgba(255, 107, 138, 0.5);
+    }
+  }
+
+  // Success
+  &--success {
+    background: rgba(16, 232, 164, 0.15);
+    border-color: rgba(16, 232, 164, 0.3);
+    color: var(--sn-success);
+
+    &:hover {
+      background: rgba(16, 232, 164, 0.25);
+      border-color: rgba(16, 232, 164, 0.5);
+    }
+  }
+}

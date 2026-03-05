@@ -1,0 +1,57 @@
+// ─── Dialog – Confirm & Alert ─────────────────────────────────
+
+.sn-dialog {
+  width: 100%;
+  max-width: 420px;
+  background: var(--sn-abyss);
+  border: 1px solid var(--sn-border);
+  border-radius: 18px;
+  padding: 28px 28px 24px;
+  text-align: center;
+  box-shadow: var(--sn-shadow-lg), var(--sn-shadow-ring);
+  font-family: var(--sn-font);
+
+  &.is-opening { animation: sn-dialogIn  0.50s cubic-bezier(0.34, 1.4, 0.64, 1) both; }
+  &.is-closing { animation: sn-dialogOut 0.30s cubic-bezier(0.4, 0, 0.8, 1) forwards; }
+}
+
+// Icon badge
+.sn-dialog__icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  animation: sn-iconPop 0.52s cubic-bezier(0.34, 1.4, 0.64, 1) 0.08s both;
+
+  &--danger  { color: var(--sn-error);   background: rgba(255, 107, 138, 0.12); }
+  &--warning { color: var(--sn-warning); background: rgba(255, 181, 71, 0.12); }
+  &--success { color: var(--sn-success); background: rgba(16, 232, 164, 0.12); }
+  &--info    { color: var(--sn-info);    background: rgba(167, 139, 250, 0.12); }
+  &--default { color: var(--sn-text-muted); background: rgba(255, 255, 255, 0.08); }
+}
+
+.sn-dialog__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--sn-text);
+  letter-spacing: -0.3px;
+  margin-bottom: 9px;
+}
+
+.sn-dialog__message {
+  font-size: 13.5px;
+  color: var(--sn-text-muted);
+  line-height: 1.65;
+  margin-bottom: 24px;
+}
+
+.sn-dialog__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+
+  &--center { justify-content: center; }
+}

@@ -1,0 +1,122 @@
+// ─── Toast ───────────────────────────────────────────────────
+
+// Container: position-based fixed stacks
+.sn-toasts {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+
+  &--top-right    { top: 20px;    right: 20px; }
+  &--top-center   { top: 20px;    left: 50%; transform: translateX(-50%); }
+  &--top-left     { top: 20px;    left: 20px; }
+  &--bottom-right { bottom: 20px; right: 20px; flex-direction: column-reverse; }
+  &--bottom-center{ bottom: 20px; left: 50%; transform: translateX(-50%); flex-direction: column-reverse; }
+  &--bottom-left  { bottom: 20px; left: 20px; flex-direction: column-reverse; }
+}
+
+// Individual toast
+.sn-toast {
+  pointer-events: all;
+  position: relative;
+  width: 360px;
+  background: rgba(11, 11, 22, 0.9);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--sn-border);
+  border-radius: var(--sn-radius);
+  overflow: hidden;
+  box-shadow: var(--sn-shadow-md), var(--sn-shadow-ring);
+  animation: sn-toastIn 0.55s cubic-bezier(0.34, 1.32, 0.64, 1) both;
+
+  &.is-exiting {
+    animation: sn-toastOut 0.42s cubic-bezier(0.4, 0, 0.8, 1) forwards;
+    pointer-events: none;
+  }
+}
+
+// Left accent strip
+.sn-toast__accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent, var(--sn-text-subtle));
+  border-radius: 2px 0 0 2px;
+}
+
+// Main content row
+.sn-toast__body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px 18px 16px;
+}
+
+// Circular icon badge
+.sn-toast__icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-bg, var(--sn-default-bg));
+  color: var(--accent, var(--sn-text-muted));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sn-toast__msg {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--sn-text);
+  line-height: 1.45;
+  font-family: var(--sn-font);
+}
+
+// Dismiss button
+.sn-toast__close {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--sn-text-subtle);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+
+  &:hover {
+    background: var(--sn-surface-h);
+    color: var(--sn-text);
+  }
+}
+
+// Auto-close progress bar
+.sn-toast__bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent, var(--sn-text-subtle));
+  transform-origin: left;
+  animation: sn-progress linear forwards;
+
+  &.is-paused {
+    animation-play-state: paused;
+  }
+
+  &.is-done {
+    animation: none;
+    transform: scaleX(0);
+  }
+}
