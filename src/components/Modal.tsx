@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useAnimatedMount } from '../hooks/useAnimatedMount';
+import { useDialogA11y } from '../hooks/useDialogA11y';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -11,6 +12,10 @@ export interface ModalProps {
 
 export function Modal({ isOpen, title, children, onClose, footer }: ModalProps) {
   const { mounted, state } = useAnimatedMount(isOpen, 320);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Scroll lock + focus trap
+  useDialogA11y(isOpen, dialogRef);
 
   // ESC key handler
   React.useEffect(() => {
@@ -30,7 +35,10 @@ export function Modal({ isOpen, title, children, onClose, footer }: ModalProps) 
       aria-modal="true"
       aria-label={title}
     >
-      <div className={`sn-modal${state === 'closing' ? ' is-closing' : ' is-opening'}`}>
+      <div
+        ref={dialogRef}
+        className={`sn-modal${state === 'closing' ? ' is-closing' : ' is-opening'}`}
+      >
         <div className="sn-modal__head">
           <span className="sn-modal__title">{title}</span>
           <button className="sn-modal__x" onClick={onClose} aria-label="Close modal">
