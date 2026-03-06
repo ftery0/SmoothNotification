@@ -53,10 +53,13 @@ export function SmoothProvider({
   defaultAutoClose = 5000,
   defaultTheme = 'dark',
 }: SmoothProviderProps) {
+  const [container, setContainer] = useState<Element | null>(null);
   const [toasts, setToasts] = useState<ToastItemProps[]>([]);
   const [modals, setModals] = useState<ActiveModal[]>([]);
   const [confirms, setConfirms] = useState<ActiveConfirm[]>([]);
   const [alerts, setAlerts] = useState<ActiveAlert[]>([]);
+
+  useEffect(() => { setContainer(document.body); }, []);
 
   const removeToast = useCallback((id: ToastItemProps['id']) => {
     setToasts(prev => prev.filter(t => t.id !== id));
@@ -181,13 +184,13 @@ export function SmoothProvider({
         />
       ))}
     </>,
-    document.body
+    container!
   );
 
   return (
     <>
       {children}
-      {portal}
+      {container && portal}
     </>
   );
 }

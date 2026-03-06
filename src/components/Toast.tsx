@@ -74,7 +74,7 @@ export function Toast({
 
   // FIX: startTimer/pauseTimer added to deps so onFocus/onBlur always call fresh versions
   useEffect(() => {
-    if (!pauseOnFocusLoss) return;
+    if (!pauseOnFocusLoss || typeof window === 'undefined') return;
     const onFocus = () => { setPaused(false); startTimer(); };
     const onBlur  = () => { setPaused(true);  pauseTimer(); };
     if (!document.hasFocus()) onBlur();
