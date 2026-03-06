@@ -30,11 +30,19 @@ export function Alert({
 }: AlertProps) {
   const { mounted, state } = useAnimatedMount(isOpen, 320);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onOk(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isOpen, onOk]);
+
   if (!mounted) return null;
 
   return (
     <div
       className={`sn-overlay${state === 'closing' ? ' is-closing' : ' is-opening'}`}
+      onClick={e => { if (e.target === e.currentTarget) onOk(); }}
       role="alertdialog"
       aria-modal="true"
       aria-label={title}
