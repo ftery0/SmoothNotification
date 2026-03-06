@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { subscribe, ToastEvent, ModalEvent, ConfirmEvent, AlertEvent } from '../core/store';
 import { ToastContainer } from './ToastContainer';
@@ -58,8 +58,13 @@ export function SmoothProvider({
   const [modals, setModals] = useState<ActiveModal[]>([]);
   const [confirms, setConfirms] = useState<ActiveConfirm[]>([]);
   const [alerts, setAlerts] = useState<ActiveAlert[]>([]);
+  // Track close-animation timeouts so they can be cleared on unmount
+  const closeTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  useEffect(() => { setContainer(document.body); }, []);
+  useEffect(() => {
+    setContainer(document.body);
+    return () => { closeTimers.current.forEach(clearTimeout); };
+  }, []);
 
   const removeToast = useCallback((id: ToastItemProps['id']) => {
     setToasts(prev => prev.filter(t => t.id !== id));
@@ -67,17 +72,17 @@ export function SmoothProvider({
 
   const closeModal = useCallback((id: number) => {
     setModals(prev => prev.map(m => m.id === id ? { ...m, isOpen: false } : m));
-    setTimeout(() => setModals(prev => prev.filter(m => m.id !== id)), 400);
+    closeTimers.current.push(setTimeout(() => setModals(prev => prev.filter(m => m.id !== id)), 400));
   }, []);
 
   const closeConfirm = useCallback((id: number) => {
     setConfirms(prev => prev.map(c => c.id === id ? { ...c, isOpen: false } : c));
-    setTimeout(() => setConfirms(prev => prev.filter(c => c.id !== id)), 400);
+    closeTimers.current.push(setTimeout(() => setConfirms(prev => prev.filter(c => c.id !== id)), 400));
   }, []);
 
   const closeAlert = useCallback((id: number) => {
     setAlerts(prev => prev.map(a => a.id === id ? { ...a, isOpen: false } : a));
-    setTimeout(() => setAlerts(prev => prev.filter(a => a.id !== id)), 400);
+    closeTimers.current.push(setTimeout(() => setAlerts(prev => prev.filter(a => a.id !== id)), 400));
   }, []);
 
   useEffect(() => {
@@ -143,54 +148,52 @@ export function SmoothProvider({
     return unsub;
   }, [defaultPosition, defaultAutoClose, defaultTheme, removeToast]);
 
-  const portal = ReactDOM.createPortal(
-    <>
-      <ToastContainer toasts={toasts} defaultPosition={defaultPosition} />
-
-      {modals.map(m => (
-        <Modal
-          key={m.id}
-          isOpen={m.isOpen}
-          title={m.title}
-          onClose={() => { m.resolve(undefined); closeModal(m.id); }}
-        >
-          {m.component}
-        </Modal>
-      ))}
-
-      {confirms.map(c => (
-        <Confirm
-          key={c.id}
-          isOpen={c.isOpen}
-          message={c.message}
-          title={c.title}
-          confirmText={c.confirmText}
-          cancelText={c.cancelText}
-          icon={c.icon}
-          onConfirm={() => { c.resolve(true);  closeConfirm(c.id); }}
-          onCancel={()  => { c.resolve(false); closeConfirm(c.id); }}
-        />
-      ))}
-
-      {alerts.map(a => (
-        <Alert
-          key={a.id}
-          isOpen={a.isOpen}
-          message={a.message}
-          title={a.title}
-          okText={a.okText}
-          icon={a.icon}
-          onOk={() => { a.resolve(); closeAlert(a.id); }}
-        />
-      ))}
-    </>,
-    container!
-  );
-
   return (
     <>
       {children}
-      {container && portal}
+      {container && ReactDOM.createPortal(
+        <>
+          <ToastContainer toasts={toasts} defaultPosition={defaultPosition} />
+
+          {modals.map(m => (
+            <Modal
+              key={m.id}
+              isOpen={m.isOpen}
+              title={m.title}
+              onClose={() => { m.resolve(undefined); closeModal(m.id); }}
+            >
+              {m.component}
+            </Modal>
+          ))}
+
+          {confirms.map(c => (
+            <Confirm
+              key={c.id}
+              isOpen={c.isOpen}
+              message={c.message}
+              title={c.title}
+              confirmText={c.confirmText}
+              cancelText={c.cancelText}
+              icon={c.icon}
+              onConfirm={() => { c.resolve(true);  closeConfirm(c.id); }}
+              onCancel={()  => { c.resolve(false); closeConfirm(c.id); }}
+            />
+          ))}
+
+          {alerts.map(a => (
+            <Alert
+              key={a.id}
+              isOpen={a.isOpen}
+              message={a.message}
+              title={a.title}
+              okText={a.okText}
+              icon={a.icon}
+              onOk={() => { a.resolve(); closeAlert(a.id); }}
+            />
+          ))}
+        </>,
+        container
+      )}
     </>
   );
 }

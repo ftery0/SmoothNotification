@@ -39,19 +39,30 @@ export function Toast({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startRef = useRef(Date.now());
   const remainingRef = useRef(typeof autoClose === 'number' ? autoClose : 0);
+  // Ref-based exiting guard — prevents double-close even from stale closures
+  const exitingRef = useRef(false);
 
   const toastRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ canDrag: false, didMove: false, start: 0, delta: 0, canCloseOnClick: true, removalDistance: 0 });
 
   const colors = ACCENT[type] ?? ACCENT.default;
 
-  // FIX: startTimer guards against existing timer to prevent race condition
+  function close() {
+    if (exitingRef.current) return;
+    exitingRef.current = true;
+    setExiting(true);
+    setTimeout(() => onClose(id), 420);
+  }
+
+  // closeRef lets startTimer always call the latest close without stale closure
+  const closeRef = useRef(close);
+  closeRef.current = close;
+
   const startTimer = useCallback(() => {
     if (autoClose === false) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     startRef.current = Date.now();
-    timerRef.current = setTimeout(close, remainingRef.current);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    timerRef.current = setTimeout(() => closeRef.current(), remainingRef.current);
   }, [autoClose]);
 
   const pauseTimer = useCallback(() => {
@@ -60,12 +71,6 @@ export function Toast({
     timerRef.current = null;
     remainingRef.current -= Date.now() - startRef.current;
   }, [autoClose]);
-
-  function close() {
-    if (exiting) return;
-    setExiting(true);
-    setTimeout(() => onClose(id), 420);
-  }
 
   useEffect(() => {
     startTimer();
