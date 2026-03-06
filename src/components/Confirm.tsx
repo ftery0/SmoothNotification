@@ -34,6 +34,13 @@ export function Confirm({
 }: ConfirmProps) {
   const { mounted, state } = useAnimatedMount(isOpen, 320);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isOpen, onCancel]);
+
   if (!mounted) return null;
 
   return (
