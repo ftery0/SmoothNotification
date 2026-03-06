@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 
-export type MountState = 'opening' | 'open' | 'closing';
+export type MountState = 'opening' | 'open' | 'closing' | 'closed';
 
 export function useAnimatedMount(isOpen: boolean, duration = 350) {
   const [mounted, setMounted] = useState(isOpen);
-  const [state, setState] = useState<MountState>(isOpen ? 'open' : 'opening');
+  const [state, setState] = useState<MountState>(isOpen ? 'open' : 'closed');
 
   useEffect(() => {
     if (isOpen) {
@@ -20,7 +20,7 @@ export function useAnimatedMount(isOpen: boolean, duration = 350) {
       setState('closing');
       const t = setTimeout(() => {
         setMounted(false);
-        setState('opening');
+        setState('closed');
       }, duration);
       return () => clearTimeout(t);
     }
