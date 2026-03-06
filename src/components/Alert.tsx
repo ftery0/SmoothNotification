@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useAnimatedMount } from '../hooks/useAnimatedMount';
+import { useDialogA11y } from '../hooks/useDialogA11y';
 import { Icon } from './Icon';
 import { TypeOptions } from '../types';
 
@@ -29,6 +30,10 @@ export function Alert({
   onOk,
 }: AlertProps) {
   const { mounted, state } = useAnimatedMount(isOpen, 320);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Scroll lock + focus trap
+  useDialogA11y(isOpen, dialogRef);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -47,7 +52,7 @@ export function Alert({
       aria-modal="true"
       aria-label={title}
     >
-      <div className={`sn-dialog${state === 'closing' ? ' is-closing' : ' is-opening'}`}>
+      <div ref={dialogRef} className={`sn-dialog${state === 'closing' ? ' is-closing' : ' is-opening'}`}>
         <div className={`sn-dialog__icon ${ICON_VARIANT[icon]}`}>
           <Icon theme="dark" type={icon} />
         </div>
