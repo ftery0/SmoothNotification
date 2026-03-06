@@ -6,8 +6,7 @@
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  pointer-events: none;
+  pointer-events: none; // gap moved to .sn-toast-inner so it collapses with the toast
 
   &--top-right    { top: 20px;    right: 20px; }
   &--top-center   { top: 20px;    left: 50%; transform: translateX(-50%); }
@@ -15,6 +14,33 @@
   &--bottom-right { bottom: 20px; right: 20px; flex-direction: column-reverse; }
   &--bottom-center{ bottom: 20px; left: 50%; transform: translateX(-50%); flex-direction: column-reverse; }
   &--bottom-left  { bottom: 20px; left: 20px; flex-direction: column-reverse; }
+}
+
+// Collapse wrapper — grid-template-rows: 1fr → 0fr shrinks the toast's allocated
+// vertical space, so remaining toasts slide up (or down) without a snap.
+.sn-toast-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.8, 1);
+
+  &.is-collapsing {
+    grid-template-rows: 0fr;
+  }
+}
+
+// Inner spacer: overflow+min-height allow 0fr to fully collapse.
+// padding provides the inter-toast gap and also collapses to 0 on exit.
+.sn-toast-inner {
+  overflow: hidden;
+  min-height: 0;
+  padding-bottom: 10px;
+}
+
+// Reversed stacks (bottom positions) — gap goes on top
+.sn-toasts--bottom-right,
+.sn-toasts--bottom-center,
+.sn-toasts--bottom-left {
+  .sn-toast-inner { padding-bottom: 0; padding-top: 10px; }
 }
 
 // Individual toast

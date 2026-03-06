@@ -149,36 +149,42 @@ export function Toast({
     document.addEventListener('pointerup', stableUp.current);
   }
 
+  // Outer wrapper handles the vertical collapse when exiting —
+  // grid-template-rows: 1fr → 0fr smoothly closes the gap left by the departing toast.
   return (
-    <div
-      ref={toastRef}
-      className={`sn-toast${exiting ? ' is-exiting' : ''}`}
-      style={{ '--accent': colors.accent, '--accent-bg': colors.bg } as React.CSSProperties}
-      onMouseEnter={pauseOnHover ? () => { setPaused(true); pauseTimer(); } : undefined}
-      onMouseLeave={pauseOnHover ? () => { setPaused(false); startTimer(); } : undefined}
-      onPointerDown={onPointerDown}
-      role="alert"
-      aria-live="polite"
-    >
-      <div className="sn-toast__accent" />
-      <div className="sn-toast__body">
-        <span className="sn-toast__icon">
-          <Icon theme={theme} type={type} />
-        </span>
-        <span className="sn-toast__msg">{message}</span>
-        <button className="sn-toast__close" onClick={close} aria-label="Dismiss notification">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-      </div>
-      {autoClose !== false && (
+    <div className={`sn-toast-wrap${exiting ? ' is-collapsing' : ''}`}>
+      <div className="sn-toast-inner">
         <div
-          className={`sn-toast__bar${paused ? ' is-paused' : ''}`}
-          style={{ animationDuration: `${autoClose}ms` }}
-        />
-      )}
+          ref={toastRef}
+          className={`sn-toast${exiting ? ' is-exiting' : ''}`}
+          style={{ '--accent': colors.accent, '--accent-bg': colors.bg } as React.CSSProperties}
+          onMouseEnter={pauseOnHover ? () => { setPaused(true); pauseTimer(); } : undefined}
+          onMouseLeave={pauseOnHover ? () => { setPaused(false); startTimer(); } : undefined}
+          onPointerDown={onPointerDown}
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="sn-toast__accent" />
+          <div className="sn-toast__body">
+            <span className="sn-toast__icon">
+              <Icon theme={theme} type={type} />
+            </span>
+            <span className="sn-toast__msg">{message}</span>
+            <button className="sn-toast__close" onClick={close} aria-label="Dismiss notification">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+          {autoClose !== false && (
+            <div
+              className={`sn-toast__bar${paused ? ' is-paused' : ''}`}
+              style={{ animationDuration: `${autoClose}ms` }}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
